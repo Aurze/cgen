@@ -87,7 +87,7 @@ void CommitCommand(args::Subparser &parser)
                         std::filesystem::copy_options::skip_existing |
                             std::filesystem::copy_options::recursive);
 
-  directory_iterator_rec(p, &find_and_replace);
+  directory_iterator_rec(std::filesystem::current_path(), &find_and_replace);
 }
 
 int main(int argc, const char **argv)
