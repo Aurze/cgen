@@ -4,6 +4,13 @@
 #include <fstream>
 #include <iostream>
 
+#include <array>
+#include <cstdio>
+#include <iostream>
+#include <memory>
+#include <stdexcept>
+#include <string>
+
 void find_and_replace(std::string origin, std::string dest) {
   std::cout << "origin:" << origin << std::endl;
   std::cout << "dest:" << dest << std::endl;
@@ -90,6 +97,25 @@ void CommitCommand(args::Subparser &parser)
   directory_iterator_rec(std::filesystem::current_path(), &find_and_replace);
 }
 
+std::string exec(const char *cmd) {
+  std::array<char, 128> buffer;
+  std::string result;
+  std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
+  if (!pipe)
+    throw std::runtime_error("popen() failed!");
+  while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr)
+    result += buffer.data();
+  return result;
+}
+
+void BuildCommand(args::Subparser &parser) {
+  std::cout << exec("cd build") << std::endl;
+  std::cout << exec("conan install ..") << std::endl;
+  std::cout << exec("cmake .. -G \"Ninja\" ") << std::endl;
+  std::cout << exec("cmake --build .") << std::endl;
+  std::cout << exec("ctest") << std::endl;
+}
+
 int main(int argc, const char **argv)
 {
   args::ArgumentParser p("Code Generator");
@@ -98,7 +124,7 @@ int main(int argc, const char **argv)
                      &CommitCommand);
   args::Command generate(commands, "generate",
                          "Generate something in a project", &CommitCommand);
-  args::Command buid(commands, "build", "Build the project", &CommitCommand);
+  args::Command buid(commands, "build", "Build the project", &BuildCommand);
   args::Command test(commands, "test", "Execute test suits", &CommitCommand);
   args::Command run(commands, "run", "Run the project", &CommitCommand);
   args::Command install(commands, "install", "Install the project",
