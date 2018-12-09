@@ -1,5 +1,4 @@
 #include "args.hxx"
-//#include <experimental/filesystem>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -10,92 +9,14 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
-void find_and_replace(std::string origin, std::string dest) {
-  std::cout << "origin:" << origin << std::endl;
-  std::cout << "dest:" << dest << std::endl;
-  std::ifstream in(origin);
-  std::ofstream out(dest);
-  std::string param = "{{project_name}}";
-  std::string value = "Test";
+#include "cppclitemplate.h"
+#include "template.h"
 
-  if (!in) {
-    std::cerr << "Could not open " << origin << "\n";
-    return;
-  }
+std::vector<CodeTemplate *> templates;
 
-  if (!out) {
-    std::cerr << "Could not open " << dest << "\n";
-    return;
-  }
-
-  std::string line;
-  std::size_t len = param.length();
-  while (getline(in, line)) {
-    while (true) {
-      size_t pos = line.find(param);
-      if (pos != std::string::npos)
-        line.replace(pos, len, value);
-      else
-        break;
-    }
-
-    out << line << '\n';
-  }
-  std::filesystem::remove(std::filesystem::path(origin));
-}
-
-static void remove_str(std::string &original, const std::string &kickout) {
-  std::string::size_type pos = 0u;
-  while ((pos = original.find(kickout, pos)) != std::string::npos) {
-    original.replace(pos, kickout.length(), "");
-  }
-}
-
-template <class func>
-void directory_iterator_rec(std::filesystem::path path, func f) {
-  for (auto &p : std::filesystem::directory_iterator(path)) {
-    std::cout << p << std::endl;
-    if (p.is_directory()) {
-      std::cout << "is_directory" << std::endl;
-      directory_iterator_rec(p, f);
-    } else if (p.path().filename().string().find("{{") == 0) {
-      std::cout << "to replace" << std::endl;
-      std::string p_str(p.path());
-      remove_str(p_str, "}}");
-      remove_str(p_str, "{{");
-      f(p.path(), p_str);
-    }
-  }
-}
-
-void CommitCommand(args::Subparser &parser)
-{
-  args::ValueFlag<std::string> message(parser, "MESSAGE", "commit message",
-                                       {'m'});
-  parser.Parse();
-
-  if (message) {
-    std::cout << "Commit";
-  } else {
-    std::cout << parser;
-  }
-
-  std::cout << std::endl;
-
-  if (message) {
-    std::cout << "message: " << args::get(message) << std::endl;
-  }
-
-  std::cout << std::filesystem::current_path() << std::endl;
-  std::filesystem::path p("/home/nicolas/devel/cgen/template");
-
-  std::filesystem::copy(p, std::filesystem::current_path(),
-                        std::filesystem::copy_options::skip_existing |
-                            std::filesystem::copy_options::recursive);
-
-  directory_iterator_rec(std::filesystem::current_path(), &find_and_replace);
-}
+void CommitCommand(args::Subparser &parser) { templates[0]->init(parser); }
 
 std::string exec(const char *cmd) {
   std::array<char, 128> buffer;
@@ -116,8 +37,10 @@ void BuildCommand(args::Subparser &parser) {
   std::cout << exec("ctest") << std::endl;
 }
 
-int main(int argc, const char **argv)
-{
+int main(int argc, const char **argv) {
+  CppCli c;
+  templates.push_back(&c);
+
   args::ArgumentParser p("Code Generator");
   args::Group commands(p, "commands");
   args::Command cnew(commands, "new", "Create a project from a template",
