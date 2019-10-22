@@ -3,8 +3,23 @@
 
 #include "args.hxx"
 #include "template.h"
+#include <filesystem>
+#include <fstream>
+#include <iostream>
 #include <string>
 #include <utility>
+
+std::string exec(std::string const &cmd) {
+  std::array<char, 128> buffer;
+  std::string result;
+  std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd.c_str(), "r"),
+                                                pclose);
+  if (!pipe)
+    throw std::runtime_error("popen() failed!");
+  while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr)
+    result += buffer.data();
+  return result;
+}
 
 void find_and_replace(std::string origin, std::string dest,
                       std::vector<std::pair<std::string, std::string>> params) {
@@ -109,9 +124,15 @@ public:
         "docker run --rm -it -v $(pwd):/project -v ~/.conan:/.conan --user "
         "$(id -u):$(id -g) tm_build_gcc \"mkdir -p build && cd build && "
         "conan install --build missing .. && cmake -G Ninja .. && ninja\"";
+    exec(cmd);
   };
 
-  void test() override{};
+  void test() override{
+    std::string cmd = "docker run --rm -it -v $(pwd):/project -v --user "
+                      "$(id -u):$(id -g) cd build && "
+                      "Test_test\"";
+    exec(cmd);
+  };
   void run() override{};
   void install() override{};
 };
