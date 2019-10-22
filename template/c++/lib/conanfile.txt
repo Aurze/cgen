@@ -1,0 +1,6 @@
+[requires]
+args/latest@ryzen/stable
+catch2/2.4.2@bincrafters/stable
+
+[generators]
+cmake
