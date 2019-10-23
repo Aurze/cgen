@@ -121,9 +121,13 @@ public:
 
   void build() override{
     std::string cmd =
-        "docker run --rm -it -v $(pwd):/project -v ~/.conan:/.conan --user "
-        "$(id -u):$(id -g) tm_build_gcc \"mkdir -p build && cd build && "
-        "conan install --build missing .. && cmake -G Ninja .. && ninja\"";
+        "docker run --rm -it "
+	"--user $(id -u):$(id -g) "
+	"-v $(pwd):/Sources "
+	"-v $(pwd)/Build:/Build "
+	"-v $(pwd)/Build:/Build "
+	"-v conan:/.conan "
+	"toolchain-cpp-lib-build"
     exec(cmd);
   };
 
