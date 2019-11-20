@@ -9,11 +9,11 @@ public:
   std::string name;
 
   virtual void init(args::Subparser &) = 0;
-  virtual void generate() = 0;
-  virtual void build() = 0;
-  virtual void test() = 0;
-  virtual void run() = 0;
-  virtual void install() = 0;
+  virtual void generate(args::Subparser &) = 0;
+  virtual void build(args::Subparser &) = 0;
+  virtual void test(args::Subparser &) = 0;
+  virtual void run(args::Subparser &) = 0;
+  virtual void install(args::Subparser &) = 0;
 };
 
 #endif

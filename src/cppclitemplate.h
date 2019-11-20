@@ -10,6 +10,7 @@
 #include <utility>
 
 std::string exec(std::string const &cmd) {
+  std::cout << "exec: " << cmd << std::endl;
   std::array<char, 128> buffer;
   std::string result;
   std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd.c_str(), "r"),
@@ -66,16 +67,16 @@ static void remove_str(std::string &original, const std::string &kickout) {
 }
 
 template <class func>
-void directory_iterator_rec(std::filesystem::path path, func f) {
+void directory_iterator_rec(std::filesystem::path path, func f, std::string& n) {
   std::vector<std::pair<std::string, std::string>> params;
 
-  params.emplace_back("{{project_name}}", "test");
+  params.emplace_back("{{project_name}}", n);
 
   for (auto &p : std::filesystem::directory_iterator(path)) {
     std::cout << p << std::endl;
     if (p.is_directory()) {
       std::cout << "is_directory" << std::endl;
-      directory_iterator_rec(p, f);
+      directory_iterator_rec(p, f, n);
     } else if (p.path().filename().string().find("{{") == 0) {
       std::cout << "to replace" << std::endl;
       std::string p_str(p.path());
@@ -114,31 +115,32 @@ public:
                           std::filesystem::copy_options::skip_existing |
                               std::filesystem::copy_options::recursive);
 
-    directory_iterator_rec(std::filesystem::current_path(), &find_and_replace);
+    directory_iterator_rec(std::filesystem::current_path(), &find_and_replace, this->name);
   };
 
-  void generate() override{};
+  void generate(args::Subparser &parser) override{};
 
-  void build() override{
-    std::string cmd =
-        "docker run --rm -it "
-	"--user $(id -u):$(id -g) "
-	"-v $(pwd):/Sources "
-	"-v $(pwd)/Build:/Build "
-	"-v $(pwd)/Build:/Build "
-	"-v conan:/.conan "
-	"toolchain-cpp-lib-build"
-    exec(cmd);
+  void build(args::Subparser &parser) override{
+    parser.Parse();
+
+    std::string cmd = "docker run --rm -it "
+//                      "--user $(id -u):$(id -g) "
+                      "-v $(pwd):/Sources "
+                      "-v $(pwd)/Build:/Build "
+                      "-v $(pwd)/Install:/Install "
+//                      "-v conan:/.conan "
+                      "toolchain-cpp-lib-build";
+    std::cout << exec(cmd);
   };
 
-  void test() override{
+  void test(args::Subparser &parser) override{
     std::string cmd = "docker run --rm -it -v $(pwd):/project -v --user "
                       "$(id -u):$(id -g) cd build && "
                       "Test_test\"";
     exec(cmd);
   };
-  void run() override{};
-  void install() override{};
+  void run(args::Subparser &parser) override{};
+  void install(args::Subparser &parser) override{};
 };
 
 #endif

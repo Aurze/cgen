@@ -1,5 +1,5 @@
 [requires]
-args/latest@ryzen/stable
+args/6.2.2@pavel-belikov/stable
 
 [generators]
 cmake

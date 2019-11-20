@@ -22,11 +22,11 @@ if [[ ! -d /Install ]]; then
 	exit 1
 fi
 
-cd /Build
+cd /Sources/build
 conan install ..
-conan build ..
-# cmake -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE:-Release} -DCMAKE_INSTALL_PREFIX=/Install $CMAKE_OPTIONS -G Ninja /Sources
-# ninja
+# conan build ..
+cmake -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE:-Release} -DCMAKE_INSTALL_PREFIX=/Install $CMAKE_OPTIONS -G Ninja /Sources
+ninja
 # if ninja -t targets | grep ^install:; then
 #	ninja install
 # fi

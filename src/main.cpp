@@ -17,6 +17,7 @@
 std::vector<CodeTemplate *> templates;
 
 void CommitCommand(args::Subparser &parser) { templates[0]->init(parser); }
+void BuildCommand(args::Subparser &parser) { templates[0]->build(parser); }
 
 std::string exec(const char *cmd) {
   std::array<char, 128> buffer;
@@ -27,14 +28,6 @@ std::string exec(const char *cmd) {
   while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr)
     result += buffer.data();
   return result;
-}
-
-void BuildCommand(args::Subparser &parser) {
-  std::cout << exec("cd build") << std::endl;
-  std::cout << exec("conan install ..") << std::endl;
-  std::cout << exec("cmake .. -G \"Ninja\" ") << std::endl;
-  std::cout << exec("cmake --build .") << std::endl;
-  std::cout << exec("ctest") << std::endl;
 }
 
 int main(int argc, const char **argv) {
